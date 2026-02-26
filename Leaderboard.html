@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaderboard — Which Experiment Do You Dread?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=DM+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:       #080c14;
+      --surface:  #0d1526;
+      --surface2: #111d35;
+      --border:   #1a2a4a;
+      --cyan:     #00d4ff;
+      --cyan-dim: rgba(0,212,255,.1);
+      --text:     #e2eaf7;
+      --muted:    #5a7099;
+      --gold:     #f5c518;
+      --silver:   #94a3b8;
+      --bronze:   #cd853f;
+      --radius:   14px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(circle at 75% 20%, rgba(0,212,255,.05) 0%, transparent 55%),
+        radial-gradient(circle at 10% 80%, rgba(245,197,24,.04) 0%, transparent 50%),
+        linear-gradient(rgba(0,212,255,.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,.018) 1px, transparent 1px);
+      background-size: auto, auto, 40px 40px, 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 48px 28px 32px;
+      animation: fadeUp .5s ease both;
+    }
+
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 14px;
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      background: #f43f5e;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #f43f5e;
+      animation: blink 1.3s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .15; }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.9rem, 4.5vw, 3rem);
+      line-height: 1.05;
+      letter-spacing: -.02em;
+      background: linear-gradient(135deg, #fff 35%, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .total-line {
+      margin-top: 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: .78rem;
+      color: var(--muted);
+      letter-spacing: .06em;
+    }
+
+    .total-line span {
+      color: var(--cyan);
+      font-size: .95rem;
+      font-weight: 500;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      position: relative; z-index: 1;
+      max-width: 780px;
+      margin: 0 auto 14px;
+      padding: 0 28px;
+      display: flex; align-items: center; gap: 14px;
+      animation: fadeUp .5s ease .1s both;
+    }
+
+    .div-line { flex: 1; height: 1px; background: var(--border); }
+
+    .div-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .64rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Board ── */
+    .board {
+      position: relative; z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 28px 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── Row ── */
+    .row {
+      display: grid;
+      grid-template-columns: 52px 72px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+      opacity: 0;
+      transform: translateX(-16px);
+      animation: slideIn .45s ease forwards;
+    }
+
+    @keyframes slideIn {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .row:hover {
+      border-color: rgba(0,212,255,.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
+      transform: translateX(4px);
+    }
+
+    /* Rank #1 gold styling */
+    .row.rank-1 {
+      border-color: rgba(245,197,24,.4);
+      background: linear-gradient(135deg, rgba(245,197,24,.06) 0%, var(--surface) 55%);
+    }
+
+    .row.rank-1::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), #f97316);
+      box-shadow: 0 0 12px rgba(245,197,24,.5);
+    }
+
+    .row.rank-1:hover {
+      border-color: rgba(245,197,24,.6);
+      box-shadow: 0 0 0 1px rgba(245,197,24,.12), 0 8px 40px rgba(0,0,0,.45);
+    }
+
+    /* ── Rank number ── */
+    .rank-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.9rem;
+      line-height: 1;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .rank-num.gold   { color: var(--gold);   text-shadow: 0 0 20px rgba(245,197,24,.4); }
+    .rank-num.silver { color: var(--silver); }
+    .rank-num.bronze { color: var(--bronze); }
+    .rank-num.other  { color: var(--muted);  font-size: 1.3rem; }
+
+    /* ── Image thumbnail ── */
+    .thumb {
+      width: 68px; height: 52px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      background: var(--surface2);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+
+    .thumb img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: brightness(.85) saturate(.9);
+      transition: filter .25s ease;
+    }
+
+    .row:hover .thumb { transform: scale(1.06); }
+    .row:hover .thumb img { filter: brightness(1) saturate(1.05); }
+
+    .row.rank-1 .thumb {
+      border-color: rgba(245,197,24,.3);
+      box-shadow: 0 0 12px rgba(245,197,24,.15);
+    }
+
+    /* ── Meta: name + bar ── */
+    .meta { min-width: 0; }
+
+    .exp-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 9px;
+      line-height: 1;
+    }
+
+    .row.rank-1 .exp-name { color: var(--gold); }
+
+    .bar-track {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--cyan), #0062ff);
+      width: 0%;
+      transition: width .8s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 0 8px rgba(0,212,255,.35);
+    }
+
+    .row.rank-1 .bar-fill {
+      background: linear-gradient(90deg, var(--gold), #f97316);
+      box-shadow: 0 0 10px rgba(245,197,24,.4);
+    }
+
+    /* ── Vote count ── */
+    .count-block {
+      text-align: right;
+      flex-shrink: 0;
+      min-width: 72px;
+    }
+
+    .count-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 2.4rem;
+      line-height: 1;
+      color: var(--text);
+      display: block;
+    }
+
+    .count-num.pop {
+      animation: countPop .4s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+
+    @keyframes countPop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.45); color: var(--cyan); }
+      100% { transform: scale(1); }
+    }
+
+    .row.rank-1 .count-num { color: var(--gold); }
+
+    .count-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      display: block;
+      margin-top: 3px;
+    }
+
+    .count-pct {
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem;
+      color: var(--cyan);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .row.rank-1 .count-pct { color: var(--gold); }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: .82rem;
+      letter-spacing: .08em;
+      animation: fadeUp .5s ease both;
+    }
+
+    .empty .big { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: .72rem;
+      font-family: 'DM Mono', monospace;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="eyebrow"><span class="live-dot"></span> Live Results</div>
+    <h1>Dread<br>Leaderboard</h1>
+    <div class="total-line">Total votes cast: <span id="total">0</span></div>
+  </header>
+
+  <div class="divider">
+    <div class="div-line"></div>
+    <span class="div-label">Ranked by most dreaded</span>
+    <div class="div-line"></div>
+  </div>
+
+  <main class="board" id="board"></main>
+
+  <footer>Science Trade Show &middot; Votes stored locally &middot; Auto-updates every 2s</footer>
+
+  <script>
+    /* ─────────────────────────────────────────────────────────────
+       EXPERIMENT METADATA — IDs must match voting-wall-local.html
+    ───────────────────────────────────────────────────────────── */
+    const EXPERIMENTS = [
+      {
+        id:    'screw_gauge',
+        name:  'Screw Gauge',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoz-bIMujUYn4aOjcwybFCtl1T8LSJiUa5Iw&s'
+      },
+      {
+        id:    'vernier_caliper',
+        name:  'Vernier Caliper',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4dSAEvSMHPcExpsLRRg5nm_AQELfeTUJaSg&s'
+      },
+      {
+        id:    'titration',
+        name:  'Titration',
+        image: 'https://media.istockphoto.com/id/1153884366/photo/acid-base-titration-of-chemistry-science-laboratory-for-analysis-reagents.jpg?s=612x612&w=0&k=20&c=LJT7jqYL9lC4W4pReidDU1gir4arPS_VQ7pIReMwWC4='
+      },
+      {
+        id:    'pendulum',
+        name:  'Pendulum',
+        image: 'https://t3.ftcdn.net/jpg/00/99/52/54/360_F_99525470_xGgYJDvjPOh4sVzOpYJPgzUMK6J7Cbb0.jpg'
+      },
+      {
+        id:    'organic_chemistry',
+        name:  'Organic Chemistry Reactions',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTk9u8kuqhTXulpS42ofPZqHHoJk7pxIbXF_g&s'
+      },
+      {
+        id:    'ray_diagrams',
+        name:  'Ray Diagram Optics',
+        image: 'https://i.pinimg.com/736x/88/b2/e3/88b2e33e7ba2c1091d186cc9c2f877ad.jpg'
+      },
+    ];
+
+    const STORAGE_KEY = 'scienceVotes_v1';
+
+    function loadVotes() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+      catch { return {}; }
+    }
+
+    function rankClass(r) {
+      return r === 1 ? 'gold' : r === 2 ? 'silver' : r === 3 ? 'bronze' : 'other';
+    }
+
+    const board   = document.getElementById('board');
+    const totalEl = document.getElementById('total');
+    const prevCounts = {};
+
+    function render() {
+      const raw = loadVotes();
+
+      const sorted = EXPERIMENTS
+        .map(e => ({ ...e, count: raw[e.id] || 0 }))
+        .sort((a, b) => b.count - a.count);
+
+      const total  = sorted.reduce((s, e) => s + e.count, 0);
+      const maxCnt = sorted[0]?.count || 1;
+
+      totalEl.textContent = total.toLocaleString();
+
+      /* Empty state */
+      if (total === 0) {
+        if (!document.getElementById('empty-state')) {
+          board.innerHTML = `
+            <div class="empty" id="empty-state">
+              <span class="big">🧪</span>
+              No votes yet — be the first!
+            </div>`;
+        }
+        return;
+      } else {
+        const el = document.getElementById('empty-state');
+        if (el) el.remove();
+      }
+
+      sorted.forEach((exp, i) => {
+        const rank   = i + 1;
+        const pct    = total > 0 ? ((exp.count / total) * 100).toFixed(1) : '0.0';
+        const barW   = ((exp.count / maxCnt) * 100).toFixed(1);
+        const rClass = rankClass(rank);
+
+        let row = document.getElementById(`row-${exp.id}`);
+
+        if (!row) {
+          row = document.createElement('div');
+          row.id = `row-${exp.id}`;
+          row.style.animationDelay = `${i * 0.07}s`;
+          row.innerHTML = `
+            <div class="rank-num ${rClass}">${rank}</div>
+            <div class="thumb">
+              <img src="${exp.image}" alt="${exp.name}" loading="lazy" />
+            </div>
+            <div class="meta">
+              <div class="exp-name">${exp.name}</div>
+              <div class="bar-track">
+                <div class="bar-fill" id="bar-${exp.id}"></div>
+              </div>
+            </div>
+            <div class="count-block">
+              <span class="count-num" id="num-${exp.id}">${exp.count}</span>
+              <span class="count-label">votes</span>
+              <span class="count-pct" id="pct-${exp.id}">${pct}%</span>
+            </div>
+          `;
+          board.appendChild(row);
+
+          /* Trigger bar width after paint */
+          requestAnimationFrame(() => {
+            const b = document.getElementById(`bar-${exp.id}`);
+            if (b) b.style.width = barW + '%';
+          });
+
+        } else {
+          const numEl = document.getElementById(`num-${exp.id}`);
+          const pctEl = document.getElementById(`pct-${exp.id}`);
+          const barEl = document.getElementById(`bar-${exp.id}`);
+          const rnkEl = row.querySelector('.rank-num');
+
+          if (prevCounts[exp.id] !== undefined && prevCounts[exp.id] !== exp.count) {
+            numEl.classList.remove('pop');
+            void numEl.offsetWidth;
+            numEl.classList.add('pop');
+            setTimeout(() => numEl.classList.remove('pop'), 450);
+          }
+
+          numEl.textContent = exp.count.toLocaleString();
+          pctEl.textContent = pct + '%';
+          barEl.style.width = barW + '%';
+          rnkEl.className   = `rank-num ${rClass}`;
+          rnkEl.textContent = rank;
+        }
+
+        row.className = `row${rank === 1 ? ' rank-1' : ''}`;
+        prevCounts[exp.id] = exp.count;
+      });
+
+      /* Re-sort DOM to match ranking order */
+      sorted.forEach(exp => {
+        const row = document.getElementById(`row-${exp.id}`);
+        if (row) board.appendChild(row);
+      });
+    }
+
+    render();
+    setInterval(render, 2000);
+    window.addEventListener('storage', render);
+  </script>
+</body>
+</html>
