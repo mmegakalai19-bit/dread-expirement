@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Which Experiment Do You Dread?</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=DM+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:        #080c14;
+      --surface:   #0d1526;
+      --surface2:  #111d35;
+      --border:    #1a2a4a;
+      --cyan:      #00d4ff;
+      --cyan-dim:  rgba(0,212,255,.12);
+      --cyan-glow: rgba(0,212,255,.35);
+      --text:      #e2eaf7;
+      --muted:     #5a7099;
+      --radius:    16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 50%, rgba(0,80,180,.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 10%, rgba(0,212,255,.05) 0%, transparent 50%),
+        linear-gradient(rgba(0,212,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,.025) 1px, transparent 1px);
+      background-size: auto, auto, 40px 40px, 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── Header ── */
+    header {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 52px 24px 36px;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--cyan-dim);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .12em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .badge .dot {
+      width: 6px; height: 6px;
+      background: var(--cyan);
+      border-radius: 50%;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .4; transform: scale(.7); }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      background: linear-gradient(135deg, #fff 30%, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: .95rem;
+      line-height: 1.7;
+    }
+
+    .subtitle strong { color: var(--cyan); font-weight: 600; }
+
+    /* ── Grid ── */
+    .grid {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      /* ↓ Only change: fixed row height so cards fill the empty space below */
+      grid-template-rows: repeat(2, calc((100vh - 320px) / 2));
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 24px;
+    }
+
+    @media (max-width: 860px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(3, 280px);
+      }
+    }
+    @media (max-width: 520px) {
+      .grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(6, 220px);
+      }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .25s cubic-bezier(.4,0,.2,1),
+                  box-shadow .25s ease,
+                  border-color .25s ease,
+                  opacity .35s ease,
+                  filter .35s ease;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+
+      opacity: 0;
+      animation: cardIn .5s ease forwards;
+    }
+
+    .card:nth-child(1) { animation-delay: .04s; }
+    .card:nth-child(2) { animation-delay: .10s; }
+    .card:nth-child(3) { animation-delay: .16s; }
+    .card:nth-child(4) { animation-delay: .22s; }
+    .card:nth-child(5) { animation-delay: .28s; }
+    .card:nth-child(6) { animation-delay: .34s; }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(0,212,255,.5);
+      box-shadow: 0 0 0 1px rgba(0,212,255,.15),
+                  0 24px 64px rgba(0,0,0,.55),
+                  0 0 40px rgba(0,212,255,.12);
+    }
+
+    .card:active { transform: translateY(-2px) scale(.99); }
+
+    /* ── Locked ── */
+    .card.locked {
+      opacity: .2;
+      filter: grayscale(.8);
+      pointer-events: none;
+      transform: none !important;
+      box-shadow: none !important;
+      border-color: var(--border) !important;
+    }
+
+    /* ── Selected ── */
+    .card.selected {
+      border-color: var(--cyan) !important;
+      box-shadow: 0 0 0 2px rgba(0,212,255,.4),
+                  0 0 56px rgba(0,212,255,.22) !important;
+      pointer-events: none;
+      transform: scale(1.02) !important;
+    }
+
+    /* "Your Vote" badge */
+    .vote-badge {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: var(--cyan);
+      color: #080c14;
+      font-family: 'DM Mono', monospace;
+      font-size: .62rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 6px;
+      opacity: 0;
+      transform: translateY(-8px) scale(.85);
+      transition: opacity .3s ease .1s, transform .3s ease .1s;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .card.selected .vote-badge {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* ── Card Image ── */
+    .card-image {
+      flex: 1;               /* image fills all card height except the name strip */
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+      background: var(--surface2);
+    }
+
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .45s ease, filter .3s ease;
+      filter: brightness(.82) saturate(.85);
+    }
+
+    /* bottom gradient so name is readable */
+    .card-image::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(8,12,20,.7) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* cyan shimmer sweep on hover */
+    .card-image::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(0,212,255,.07) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform .5s ease;
+      z-index: 3;
+    }
+
+    .card:not(.locked):not(.selected):hover .card-image img {
+      transform: scale(1.08);
+      filter: brightness(.96) saturate(1.05);
+    }
+
+    .card:not(.locked):not(.selected):hover .card-image::before {
+      transform: translateX(100%);
+    }
+
+    /* ── Card Body ── */
+    .card-body {
+      padding: 14px 18px 18px;
+      flex-shrink: 0;
+    }
+
+    .card-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    /* ── Ripple ── */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(0,212,255,.28);
+      transform: scale(0);
+      animation: ripple-out .6s linear forwards;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    @keyframes ripple-out {
+      to { transform: scale(5); opacity: 0; }
+    }
+
+    /* ── Full-screen redirect overlay ── */
+    #overlay {
+      position: fixed; inset: 0;
+      background: rgba(8,12,20,.97);
+      backdrop-filter: blur(6px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .4s ease;
+    }
+
+    #overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .overlay-icon {
+      width: 86px; height: 86px;
+      border-radius: 50%;
+      border: 2px solid var(--cyan);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem;
+      color: var(--cyan);
+      box-shadow: 0 0 48px rgba(0,212,255,.4), inset 0 0 24px rgba(0,212,255,.08);
+      animation: popIn .45s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.3); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .overlay-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 2rem;
+      color: #fff;
+      letter-spacing: -.01em;
+    }
+
+    .overlay-name {
+      font-family: 'DM Mono', monospace;
+      font-size: .82rem;
+      color: var(--cyan);
+      letter-spacing: .08em;
+      background: var(--cyan-dim);
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,212,255,.2);
+    }
+
+    .overlay-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem;
+      color: var(--muted);
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .overlay-progress {
+      width: 200px;
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .overlay-progress-fill {
+      height: 100%;
+      background: var(--cyan);
+      border-radius: 99px;
+      width: 0%;
+      box-shadow: 0 0 8px rgba(0,212,255,.5);
+      animation: progressFill 1.3s linear forwards;
+      animation-delay: .2s;
+    }
+
+    @keyframes progressFill {
+      from { width: 0%; }
+      to   { width: 100%; }
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 24px;
+      color: var(--muted);
+      font-size: .75rem;
+      font-family: 'DM Mono', monospace;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge"><span class="dot"></span> Science Trade Show</div>
+    <h1>Which Experiment<br>Do You Dread?</h1>
+    <p class="subtitle">
+      Tap the one that fills you with dread.<br>
+      <strong>One vote per person — results shown instantly.</strong>
+    </p>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <footer>Science Trade Show &middot; Anonymous Voting &middot; One vote per person</footer>
+
+  <div id="overlay">
+    <div class="overlay-icon">✓</div>
+    <div class="overlay-title">Vote Recorded!</div>
+    <div class="overlay-name" id="overlay-name"></div>
+    <div class="overlay-sub">Taking you to the leaderboard…</div>
+    <div class="overlay-progress">
+      <div class="overlay-progress-fill"></div>
+    </div>
+  </div>
+
+  <script>
+    const EXPERIMENTS = [
+      {
+        id:    'screw_gauge',
+        name:  'Screw Gauge',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoz-bIMujUYn4aOjcwybFCtl1T8LSJiUa5Iw&s'
+      },
+      {
+        id:    'vernier_caliper',
+        name:  'Vernier Caliper',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS4dSAEvSMHPcExpsLRRg5nm_AQELfeTUJaSg&s'
+      },
+      {
+        id:    'titration',
+        name:  'Titration',
+        image: 'https://media.istockphoto.com/id/1153884366/photo/acid-base-titration-of-chemistry-science-laboratory-for-analysis-reagents.jpg?s=612x612&w=0&k=20&c=LJT7jqYL9lC4W4pReidDU1gir4arPS_VQ7pIReMwWC4='
+      },
+      {
+        id:    'pendulum',
+        name:  'Pendulum',
+        image: 'https://t3.ftcdn.net/jpg/00/99/52/54/360_F_99525470_xGgYJDvjPOh4sVzOpYJPgzUMK6J7Cbb0.jpg'
+      },
+      {
+        id:    'organic_chemistry',
+        name:  'Organic Chemistry Reactions',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTk9u8kuqhTXulpS42ofPZqHHoJk7pxIbXF_g&s'
+      },
+      {
+        id:    'ray_diagrams',
+        name:  'Ray Diagrams',
+        image: 'https://i.pinimg.com/736x/88/b2/e3/88b2e33e7ba2c1091d186cc9c2f877ad.jpg'
+      },
+    ];
+
+    const STORAGE_KEY = 'scienceVotes_v1';
+
+    function loadVotes() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+      catch { return {}; }
+    }
+
+    function saveVote(id) {
+      const v = loadVotes();
+      v[id] = (v[id] || 0) + 1;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
+    }
+
+    let hasVoted = false;
+    const grid        = document.getElementById('grid');
+    const overlay     = document.getElementById('overlay');
+    const overlayName = document.getElementById('overlay-name');
+
+    EXPERIMENTS.forEach(exp => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      card.innerHTML = `
+        <div class="vote-badge">✓ Your Vote</div>
+        <div class="card-image">
+          <img src="${exp.image}" alt="${exp.name}" loading="lazy" />
+        </div>
+        <div class="card-body">
+          <div class="card-name">${exp.name}</div>
+        </div>
+      `;
+
+      function onVote(e) {
+        e.preventDefault();
+        if (hasVoted) return;
+        hasVoted = true;
+
+        saveVote(exp.id);
+
+        const rect = card.getBoundingClientRect();
+        const cx   = e.touches ? e.changedTouches[0].clientX : e.clientX;
+        const cy   = e.touches ? e.changedTouches[0].clientY : e.clientY;
+        const sz   = Math.max(rect.width, rect.height);
+        const rip  = document.createElement('span');
+        rip.className = 'ripple';
+        rip.style.cssText = `width:${sz}px;height:${sz}px;left:${cx-rect.left-sz/2}px;top:${cy-rect.top-sz/2}px;`;
+        card.appendChild(rip);
+        setTimeout(() => rip.remove(), 700);
+
+        card.classList.add('selected');
+        document.querySelectorAll('.card').forEach(c => {
+          if (c !== card) c.classList.add('locked');
+        });
+
+        setTimeout(() => {
+          overlayName.textContent = exp.name;
+          overlay.classList.add('show');
+        }, 280);
+
+        setTimeout(() => {
+          window.location.href = 'leaderboard.html';
+        }, 1800);
+      }
+
+      card.addEventListener('click', onVote);
+      card.addEventListener('touchend', onVote, { passive: false });
+
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>
